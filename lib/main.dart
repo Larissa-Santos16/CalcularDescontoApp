@@ -5,39 +5,68 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Calculadora de Desconto',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: CalculadoraDesconto(),
+      debugShowCheckedModeBanner: false,
+      title: 'Calcular Desconto',
+      theme: ThemeData(primarySwatch: Colors.purple),
+      home: const MyHomePage(title: 'Calcular Desconto'),
     );
   }
 }
 
-class CalculadoraDesconto extends StatefulWidget {
+class MyHomePage extends StatefulWidget {
+  final String title;
+
+  const MyHomePage({Key? key, required this.title}) : super(key: key);
+
   @override
-  _CalculadoraDescontoState createState() => _CalculadoraDescontoState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _CalculadoraDescontoState extends State<CalculadoraDesconto> {
+class _MyHomePageState extends State<MyHomePage> {
   double valorTotal = 0.0;
   int tipoCliente = 1; // Cliente comum por padrão
   TextEditingController valorController = TextEditingController();
+  String? _selectedItem;
+  final List<String> _items = ["Cliente Comum", "Cliente Vip", "Funcionário"];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calculadora de Desconto'),
+        title: Text(widget.title),
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(20.0),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+          children: <Widget>[
+            DropdownButton<String>(
+              value: _selectedItem,
+              items: _items.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(item),
+                );
+              }).toList(),
+              onChanged: (String? selectedItem) {
+                setState(() {
+                  _selectedItem = selectedItem;
+                });
+                if (_selectedItem == "Cliente Vip") {
+                  tipoCliente = 2;
+                } else if (_selectedItem == "Funcionário") {
+                  tipoCliente = 3;
+                } else {
+                  tipoCliente = 1;
+                }
+              },
+              hint: Text('Selecione o tipo de cliente'),
+            ),
             TextField(
               controller: valorController,
               decoration: InputDecoration(
@@ -45,30 +74,6 @@ class _CalculadoraDescontoState extends State<CalculadoraDesconto> {
               ),
               keyboardType: TextInputType.numberWithOptions(decimal: true),
             ),
-            SizedBox(height: 20.0),
-            DropdownButtonFormField(
-              value: tipoCliente,
-              onChanged: (int? value) {
-                setState(() {
-                  tipoCliente = value!;
-                });
-              },
-              items: [
-                DropdownMenuItem(
-                  value: 1,
-                  child: Text('Cliente Comum'),
-                ),
-                DropdownMenuItem(
-                  value: 2,
-                  child: Text('Funcionário'),
-                ),
-                DropdownMenuItem(
-                  value: 3,
-                  child: Text('VIP'),
-                ),
-              ],
-            ),
-            SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: calcularDesconto,
               child: Text('Calcular Desconto'),
@@ -85,38 +90,19 @@ class _CalculadoraDescontoState extends State<CalculadoraDesconto> {
       double desconto = _calcularDesconto(tipoCliente);
       valorTotal -= desconto;
     });
-
-    _mostrarDialog(valorTotal);
   }
 
   double _calcularDesconto(int tipoCliente) {
     switch (tipoCliente) {
-      case 2:
-        return valorTotal * 0.10; // 10% de desconto para funcionários
-      case 3:
-        return valorTotal * 0.05; // 5% de desconto para clientes VIP
+      case 1: // Cliente Comum
+        return valorTotal * 0.0;
+      case 2: // Cliente Vip
+        return valorTotal * 0.05;
+      case 3: // Funcionário
+        return valorTotal * 0.10;
       default:
         return 0.0;
     }
   }
-
-  void _mostrarDialog(double valorTotal) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Total a Pagar'),
-          content: Text('O total a pagar é R\$ $valorTotal'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
+
